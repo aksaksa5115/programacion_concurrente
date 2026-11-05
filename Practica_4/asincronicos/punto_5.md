@@ -112,3 +112,62 @@ Process Impresora[id: 1..3] {
         receive Documentos(doc);
     }
 }
+
+5d)
+
+chan Documentos(text);
+chan DocumentosJefe(text);
+chan Hay(int);                 # aviso de que hay un documento (el valor no importa)
+chan Libre(int);               # la impresora avisa que está libre
+chan Trabajo[1..3](text);      # el coordinador le entrega el documento
+chan Fin(int);
+
+Process Administrativo[id: 1..N] {
+    text doc;
+    for (i = 1..10) {
+        doc = generarDocumento();
+        send Documentos(doc);
+        send Hay(1);
+    }
+}
+
+Process Director {
+    text doc;
+    for (i = 1..10) {
+        doc = generarDocumento();
+        send DocumentosJefe(doc);
+        send Hay(1);
+    }
+}
+
+Process Coordinador {
+    int idI, aux;
+    text doc;
+    for (int i=1; i<=(N+1)*10; i++) {
+        receive Hay(aux);                      # se bloquea hasta que haya algún documento
+        receive Libre(idI);                    # se bloquea hasta que haya impresora libre
+        if (not empty(DocumentosJefe)) {       # prioridad al director
+            receive DocumentosJefe(doc);
+        } else {
+            receive Documentos(doc);           # seguro hay uno: Hay lo garantiza
+        }
+        send Trabajo[idI](doc);
+    }
+    for (int i=1; i<=3; i++){
+        send Trabajo[i]("fin")
+    }
+}
+
+Process Impresora[id: 1..3] {
+    text doc;
+    send Libre(id);
+    receive Trabajo[id](doc);
+    while (doc <> "fin") {
+        delay(tiempoImpresion);
+        send Libre(id);
+        receive Trabajo[id](doc);
+    }
+}
+
+
+e) es lo mismo que el D ya que no hay busy waiting
