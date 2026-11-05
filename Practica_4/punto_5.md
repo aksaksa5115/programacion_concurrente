@@ -83,3 +83,32 @@ Process Impresora[id: 1..3] {
         delay(tiempoImpresion);
     }
 }
+
+5c)
+
+chan Documentos(text);
+chan Fin(int);
+
+Process Administrativo[id: 1..N] {
+    text doc;
+    for (i = 1..10) {
+        doc = generarDocumento();
+        send Documentos(doc);
+    }
+    send Fin(id);                      # avisa que terminó de enviar
+}
+
+Process Coordinador {
+    int aux;
+    for (i = 1..N) receive Fin(aux);   # espera a que terminen todos
+    for (i = 1..3) send Documentos("FIN");   # una señal de fin por impresora
+}
+
+Process Impresora[id: 1..3] {
+    text doc;
+    receive Documentos(doc);
+    while (doc <> "FIN") {
+        delay(tiempoImpresion);
+        receive Documentos(doc);
+    }
+}
