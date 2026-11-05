@@ -38,37 +38,48 @@ Process Impresora[id: 1..3] {
 
 chan Documentos(text);
 chan DocumentosJefe(text);
-chan impresion[1..3](txt)
-chan libre(int)
-
+chan Hay(int);                 # aviso de que hay un documento (el valor no importa)
+chan Libre(int);               # la impresora avisa que está libre
+chan Trabajo[1..3](text);      # el coordinador le entrega el documento
 
 Process Administrativo[id: 1..N] {
     text doc;
     while (true) {
-        doc = generarDocumento();      # trabaja
-        send Documentos(doc);          # lo manda a imprimir y sigue
+        doc = generarDocumento();
+        send Documentos(doc);
+        send Hay(1);
     }
 }
 
+Process Director {
+    text doc;
+    while (true) {
+        doc = generarDocumento();
+        send DocumentosJefe(doc);
+        send Hay(1);
+    }
+}
 
-process coordinador(){
-    txt doc;
-    int idI;
-    while (true)
-        receive libre(idI)
-        if (!empty(DocumentosJefe)){
-            receive DocumentosJefe(doc)
-        } else if (!empty(Documentos)){
-            receive Documentos(doc)
+Process Coordinador {
+    int idI, aux;
+    text doc;
+    while (true) {
+        receive Hay(aux);                      # se bloquea hasta que haya algún documento
+        receive Libre(idI);                    # se bloquea hasta que haya impresora libre
+        if (not empty(DocumentosJefe)) {       # prioridad al director
+            receive DocumentosJefe(doc);
+        } else {
+            receive Documentos(doc);           # seguro hay uno: Hay lo garantiza
         }
-        send Impresion[idI](doc)
+        send Trabajo[idI](doc);
+    }
 }
 
 Process Impresora[id: 1..3] {
     text doc;
     while (true) {
-        send libre(id);
-        receive Impresion[id](doc);       # FIFO: orden de llegada
-        delay(tiempoImpresion);        # imprime
+        send Libre(id);
+        receive Trabajo[id](doc);
+        delay(tiempoImpresion);
     }
 }
