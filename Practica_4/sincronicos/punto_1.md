@@ -46,24 +46,32 @@ Process Examinador[id: 1..R] {
     text url, respuesta;
     while (true) {
         url = buscarSitioSospechoso();
-        Analizador ! sitio(id, url);
+        Coordinador ! sitio(id, url);
         Analizador ? resultado(respuesta);
     }
 }
 
-Process coordinador(){
-    cola [txt, int];
-    while (true){
-
-    }
+Process Coordinador {
+    cola Fila;
+    int idE;
+    text url;
+    do Examinador[*] ? sitio(idE, url) -> push(Fila, (idE, url));
+       (not empty(Fila)); Analizador ? pedido() ->
+            pop(Fila, (idE, url));
+            Analizador ! sitio(idE, url);
+    od
 }
 
 Process Analizador {
     int idE;
     text url, respuesta;
     while (true) {
-        Examinador[*] ? sitio(idE, url);
+        Coordinador ! pedido();
+        Coordinador ? sitio(idE, url);
         respuesta = analizar(url);
         Examinador[idE] ! resultado(respuesta);
     }
 }
+
+d) cambiaria el envio de la respuesta
+
