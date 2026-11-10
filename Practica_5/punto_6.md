@@ -100,5 +100,13 @@ procedure playa IS
         END LOOP
     END coordinador
 
-    
+BEGIN   -- programa principal
+   FOR i IN 1..5 LOOP
+      arrEquipos(i).Ident(i);              -- al equipo i le dice "vos sos el i"
+   END LOOP;
+
+   FOR i IN 1..20 LOOP
+      arrPersonas(i).Ident(equipoDe(i));   -- a la persona i le dice su equipo
+   END LOOP;
+END Playa;
     
