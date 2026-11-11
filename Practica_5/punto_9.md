@@ -52,7 +52,7 @@ procedure Empresa is
    BEGIN
       LOOP
          Coordinador.Libre(casa);          -- espera hasta que haya a quién atender
-         Persona_llegada(casa);            -- ver nota abajo
+         Persona_llegada(casa);            
       END LOOP;
    END Camion;
 
